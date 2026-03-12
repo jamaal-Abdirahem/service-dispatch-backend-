@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  OPERATOR
+  TECHNICIAN
+  ADMIN
+}
+
+enum RequestStatus {
+  REPORTED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  PAID
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  phone          String           @unique
+  password       String
+  role           Role             @default(CLIENT)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  
+  // Relations
+  technicianProfile Technician?
+  serviceRequests   ServiceRequest[] // Requests made if role is CLIENT
+}
+
+model Technician {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String           @unique @db.ObjectId
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location       String?
+  available      Boolean          @default(true)
+  
+  // Relations
+  assignedJobs   ServiceRequest[] // Requests assigned to this tech
+}
+
+model ServiceRequest {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  clientName     String           
+  phone          String
+  location       String
+  problem        String
+  status         RequestStatus    @default(REPORTED)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  
+  // Relations
+  clientId       String           @db.ObjectId
+  client         User             @relation(fields: [clientId], references: [id])
+  
+  technicianId   String?          @db.ObjectId
+  technician     Technician?      @relation(fields: [technicianId], references: [id])
+  
+  payment        Payment?
+}
+
+model Payment {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  requestId      String           @unique @db.ObjectId
+  request        ServiceRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  amount         Float
+  status         PaymentStatus    @default(PENDING)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}

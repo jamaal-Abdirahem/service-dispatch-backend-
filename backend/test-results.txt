@@ -1,0 +1,65 @@
+﻿
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+ SERVICE DISPATCH ΓÇô API TEST SUITE
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+ΓöÇΓöÇ 1. AUTH ENDPOINTS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Γ£à PASS  Register rejects password < 8 chars
+  Γ£à PASS  Register rejects missing name
+  Γ£à PASS  Register CLIENT
+  Γ£à PASS  Register TECHNICIAN
+  Γ£à PASS  Register OPERATOR
+  Γ£à PASS  Register duplicate phone ΓåÆ 409
+  Γ£à PASS  Login CLIENT
+  Γ£à PASS  Login TECHNICIAN
+  Γ£à PASS  Login OPERATOR
+  Γ£à PASS  Login wrong password ΓåÆ 401
+
+ΓöÇΓöÇ 2. USER ENDPOINTS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Γ£à PASS  GET /users/me (CLIENT)
+  Γ£à PASS  GET /users/me no token ΓåÆ 401
+  Γ£à PASS  GET /users CLIENT ΓåÆ 403
+  Γ£à PASS  GET /users OPERATOR ΓåÆ 200
+  Γ£à PASS  GET /users/technicians ΓåÆ 200
+  Γ£à PASS  Technician profile auto-created
+  Γ£à PASS  PATCH technician availability CLIENT ΓåÆ 403
+  Γ£à PASS  PATCH availability invalid type ΓåÆ 400
+  Γ£à PASS  PATCH technician availability ΓåÆ 200
+
+ΓöÇΓöÇ 3. SERVICE REQUEST ENDPOINTS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Γ£à PASS  Create request missing field ΓåÆ 400
+  Γ£à PASS  Create request TECHNICIAN ΓåÆ 403
+  Γ£à PASS  Create request CLIENT ΓåÆ 201
+  Γ£à PASS  GET /requests CLIENT (own only)
+  Γ£à PASS  GET /requests OPERATOR ΓåÆ 200
+  Γ£à PASS  GET /requests/technician CLIENT ΓåÆ 403
+  Γ£à PASS  GET /requests/technician TECHNICIAN ΓåÆ 200
+  Γ£à PASS  GET /requests/:id CLIENT (own) ΓåÆ 200
+  Γ£à PASS  GET /requests/:id TECHNICIAN (not assigned) ΓåÆ 403
+  Γ£à PASS  GET /requests/:id bad ID ΓåÆ 404
+  Γ£à PASS  Assign TECHNICIAN CLIENT ΓåÆ 403
+  Γ£à PASS  Assign missing technicianId ΓåÆ 400
+  Γ£à PASS  Assign technician ΓåÆ status ASSIGNED
+  Γ£à PASS  Re-assign already ASSIGNED ΓåÆ 400
+  Γ£à PASS  GET /requests/:id TECHNICIAN (assigned) ΓåÆ 200
+  Γ£à PASS  Arrived CLIENT ΓåÆ 403
+  Γ£à PASS  Arrived TECHNICIAN ΓåÆ status IN_PROGRESS
+  Γ£à PASS  Arrived again (wrong state) ΓåÆ 400
+  Γ£à PASS  Complete CLIENT ΓåÆ 403
+  Γ£à PASS  Complete TECHNICIAN ΓåÆ status COMPLETED
+  Γ£à PASS  Approve TECHNICIAN ΓåÆ 403
+  Γ£à PASS  Approve CLIENT ΓåÆ 200
+  Γ£à PASS  Pay missing amount ΓåÆ 400
+  Γ£à PASS  Pay zero amount ΓåÆ 400
+  Γ£à PASS  Pay CLIENT ΓåÆ status PAID
+  Γ£à PASS  Pay again (already PAID) ΓåÆ 400
+
+ΓöÇΓöÇ 4. MISC ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Γ£à PASS  Body > 10kb ΓåÆ 413 Payload Too Large
+  Γ£à PASS  Unknown route ΓåÆ 404
+  Γ£à PASS  Technician available again after job completion
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+ RESULTS:  48 passed  |  0 failed
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
