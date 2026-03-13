@@ -42,6 +42,8 @@ app.use(express.json({ limit: '10kb' }));
 app.use(morgan(isProduction ? 'combined' : 'dev'));
 
 // ── Rate Limiting ─────────────────────────────────────────────────────────────
+// Disabled to allow unlimited requests during development/testing
+/*
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
@@ -60,9 +62,10 @@ const authLimiter = rateLimit({
 });
 
 app.use('/api', limiter);
+*/
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/requests', requestRoutes);
 
