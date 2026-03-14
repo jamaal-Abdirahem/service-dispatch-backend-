@@ -20,6 +20,9 @@ enum Role {
 enum RequestStatus {
   REPORTED
   ASSIGNED
+  ARRIVED
+  ESTIMATED
+  APPROVED
   IN_PROGRESS
   COMPLETED
   PAID
@@ -62,6 +65,8 @@ model ServiceRequest {
   phone          String
   location       String
   problem        String
+  budget         Float?
+  problemReport  String?
   status         RequestStatus    @default(REPORTED)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt

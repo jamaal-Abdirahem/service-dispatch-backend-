@@ -85,6 +85,36 @@ export const technicianArrived = asyncHandler(async (req: AuthRequest, res: Resp
   res.json({ success: true, data: updatedRequest });
 });
 
+export const submitEstimate = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user?.id as string;
+  const { report, budget } = req.body;
+
+  if (!report || budget === undefined || isNaN(Number(budget)) || Number(budget) < 0) {
+    res.status(400);
+    throw new Error('Valid `report` and positive `budget` are required');
+  }
+
+  const updatedRequest = await RequestService.submitEstimate(id, userId, report, budget);
+  res.json({ success: true, data: updatedRequest });
+});
+
+export const approveEstimate = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const clientId = req.user?.id as string;
+
+  const updatedRequest = await RequestService.approveEstimate(id, clientId);
+  res.json({ success: true, data: updatedRequest });
+});
+
+export const startWork = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user?.id as string;
+
+  const updatedRequest = await RequestService.startWork(id, userId);
+  res.json({ success: true, data: updatedRequest });
+});
+
 export const completeService = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const userId = req.user?.id as string;
@@ -98,7 +128,7 @@ export const approveService = asyncHandler(async (req: AuthRequest, res: Respons
   const clientId = req.user?.id as string;
 
   await RequestService.approveService(id, clientId);
-  res.json({ success: true, message: 'Service approved' });
+  res.json({ success: true, message: 'Service work approved, ready for payment' });
 });
 
 export const confirmPayment = asyncHandler(async (req: AuthRequest, res: Response) => {

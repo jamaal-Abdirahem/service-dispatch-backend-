@@ -105,6 +105,64 @@ export class RequestService {
 
     return prisma.serviceRequest.update({
       where: { id: requestId },
+      data: { status: RequestStatus.ARRIVED }
+    });
+  }
+
+  static async submitEstimate(requestId: string, userId: string, report: string, budget: number) {
+    const technician = await prisma.technician.findUnique({ where: { userId } });
+    if (!technician) throw new AppError('Only assigned technician can submit an estimate', 403);
+
+    const serviceRequest = await prisma.serviceRequest.findUnique({ where: { id: requestId } });
+    if (!serviceRequest || serviceRequest.technicianId !== technician.id) {
+      throw new AppError('Unauthorized for this request', 403);
+    }
+
+    if (serviceRequest.status !== RequestStatus.ARRIVED) {
+      throw new AppError('Status must be ARRIVED to submit an estimate', 400);
+    }
+
+    return prisma.serviceRequest.update({
+      where: { id: requestId },
+      data: { 
+        status: RequestStatus.ESTIMATED,
+        problemReport: report,
+        budget: Number(budget)
+      }
+    });
+  }
+
+  static async approveEstimate(requestId: string, clientId: string) {
+    const serviceRequest = await prisma.serviceRequest.findUnique({ where: { id: requestId } });
+    if (!serviceRequest || serviceRequest.clientId !== clientId) {
+      throw new AppError('Unauthorized for this request', 403);
+    }
+
+    if (serviceRequest.status !== RequestStatus.ESTIMATED) {
+      throw new AppError('Status must be ESTIMATED to approve the budget', 400);
+    }
+
+    return prisma.serviceRequest.update({
+      where: { id: requestId },
+      data: { status: RequestStatus.APPROVED }
+    });
+  }
+
+  static async startWork(requestId: string, userId: string) {
+    const technician = await prisma.technician.findUnique({ where: { userId } });
+    if (!technician) throw new AppError('Only assigned technician can start work', 403);
+
+    const serviceRequest = await prisma.serviceRequest.findUnique({ where: { id: requestId } });
+    if (!serviceRequest || serviceRequest.technicianId !== technician.id) {
+      throw new AppError('Unauthorized for this request', 403);
+    }
+
+    if (serviceRequest.status !== RequestStatus.APPROVED) {
+      throw new AppError('Status must be APPROVED by the client before starting work', 400);
+    }
+
+    return prisma.serviceRequest.update({
+      where: { id: requestId },
       data: { status: RequestStatus.IN_PROGRESS }
     });
   }
@@ -141,8 +199,7 @@ export class RequestService {
     });
   }
 
-  // approveService is a client-facing validation gate (no status change needed —
-  // status stays COMPLETED until payment is confirmed). Returns the request for confirmation.
+  // approveService is a client-facing validation gate.
   static async approveService(requestId: string, clientId: string) {
     const serviceRequest = await prisma.serviceRequest.findUnique({ where: { id: requestId } });
     if (!serviceRequest || serviceRequest.clientId !== clientId) {
@@ -150,11 +207,10 @@ export class RequestService {
     }
 
     if (serviceRequest.status !== RequestStatus.COMPLETED) {
-      throw new AppError('Status must be COMPLETED to approve', 400);
+      throw new AppError('Status must be COMPLETED to approve final work', 400);
     }
 
-    // Approval is a client acknowledgement; status advances on payment (confirmPayment).
-    return serviceRequest;
+    return serviceRequest; // Client retrieves it, checks it, then goes to payment
   }
 
   static async confirmPayment(requestId: string, clientId: string, amount: number) {
@@ -165,6 +221,11 @@ export class RequestService {
 
     if (serviceRequest.status !== RequestStatus.COMPLETED) {
       throw new AppError('Service must be COMPLETED and approved before payment', 400);
+    }
+
+    // Usually you'd check if amount >= serviceRequest.budget here!
+    if (serviceRequest.budget && amount < serviceRequest.budget) {
+        throw new AppError('Payment amount is less than the approved budget', 400);
     }
 
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {

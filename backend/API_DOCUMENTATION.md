@@ -202,7 +202,7 @@ or for action-only responses (no data to return):
 
 ## 8. Status Lifecycle
 
-A `ServiceRequest` moves through the following states in order:
+A `ServiceRequest` moves through the following states in strict order:
 
 ```
 REPORTED
@@ -210,6 +210,15 @@ REPORTED
    ▼
 ASSIGNED
    │  ← POST /:id/arrived   (TECHNICIAN)
+   ▼
+ARRIVED
+   │  ← POST /:id/estimate  (TECHNICIAN)
+   ▼
+ESTIMATED
+   │  ← POST /:id/approve-estimate (CLIENT)
+   ▼
+APPROVED
+   │  ← POST /:id/start-work (TECHNICIAN)
    ▼
 IN_PROGRESS
    │  ← POST /:id/complete  (TECHNICIAN)
@@ -753,7 +762,7 @@ Assign a technician to a request. Advances status from `REPORTED` → `ASSIGNED`
 
 ### `POST /api/requests/:id/arrived`
 
-Technician confirms they have arrived at the client's location. Advances status from `ASSIGNED` → `IN_PROGRESS`.
+Technician confirms they have arrived at the client's location. Advances status from `ASSIGNED` → `ARRIVED`.
 
 - **Auth required:** ✅ `TECHNICIAN` (must be the **assigned** technician)
 - **Required status:** `ASSIGNED`
@@ -775,7 +784,7 @@ None required.
   "success": true,
   "data": {
     "id": "507f1f77bcf86cd799439030",
-    "status": "IN_PROGRESS",
+    "status": "ARRIVED",
     "technicianId": "507f1f77bcf86cd799439020",
     "clientName": "Hassan Idle",
     "location": "Jigjiga Yar, near the central market",
@@ -794,6 +803,123 @@ None required.
 | `400` | `Status must be ASSIGNED to mark arrived` | Request is not in `ASSIGNED` state |
 | `403` | `Only assigned technician can mark arrival` | Caller is not a registered technician |
 | `403` | `Unauthorized for this request` | Caller is a technician but not the one assigned to this request |
+
+---
+
+### `POST /api/requests/:id/estimate`
+
+Technician assesses the issue, submits a detailed problem report, and an estimated budget. Advances status from `ARRIVED` → `ESTIMATED`.
+
+- **Auth required:** ✅ `TECHNICIAN` (must be the **assigned** technician)
+- **Required status:** `ARRIVED`
+
+#### URL Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `:id` | `string` (ObjectId) | The service request ID |
+
+#### Request Body
+
+```json
+{
+  "report": "Found the exact shorted wire inside the main oven circuitry.",
+  "budget": 150
+}
+```
+
+#### Success Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "507f1f77bcf86cd799439030",
+    "status": "ESTIMATED",
+    "problemReport": "Found the exact shorted wire inside the main oven circuitry.",
+    "budget": 150,
+    "technicianId": "507f1f77bcf86cd799439020"
+  }
+}
+```
+
+#### Error Responses
+
+| Status | `message` | Cause |
+|--------|-----------|-------|
+| `400` | `Valid \`report\` and positive \`budget\` are required` | Malformed or negative budget / empty report |
+| `400` | `Status must be ARRIVED to submit an estimate` | Request is not in `ARRIVED` state |
+| `403` | `Only assigned technician can submit an estimate` | Not the assigned technician |
+
+---
+
+### `POST /api/requests/:id/approve-estimate`
+
+Client reviews and approves the technician's submitted problem report and budget estimate. Advances status from `ESTIMATED` → `APPROVED`.
+
+- **Auth required:** ✅ `CLIENT` (must own the request)
+- **Required status:** `ESTIMATED`
+
+#### URL Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `:id` | `string` (ObjectId) | The service request ID |
+
+#### Success Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "507f1f77bcf86cd799439030",
+    "status": "APPROVED",
+    "budget": 150
+  }
+}
+```
+
+#### Error Responses
+
+| Status | `message` | Cause |
+|--------|-----------|-------|
+| `400` | `Status must be ESTIMATED to approve the budget` | Request is not correctly awaiting budget approval |
+| `403` | `Unauthorized for this request` | Caller does not own the request |
+
+---
+
+### `POST /api/requests/:id/start-work`
+
+Technician officially starts working on the repair after the client's approval. Advances status from `APPROVED` → `IN_PROGRESS`.
+
+- **Auth required:** ✅ `TECHNICIAN` (must be the **assigned** technician)
+- **Required status:** `APPROVED`
+
+#### URL Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `:id` | `string` (ObjectId) | The service request ID |
+
+#### Success Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "507f1f77bcf86cd799439030",
+    "status": "IN_PROGRESS",
+    "technicianId": "507f1f77bcf86cd799439020"
+  }
+}
+```
+
+#### Error Responses
+
+| Status | `message` | Cause |
+|--------|-----------|-------|
+| `400` | `Status must be APPROVED by the client before starting work` | Request was never approved or already progressed |
+| `403` | `Only assigned technician can start work` | Not the assigned technician |
 
 ---
 
@@ -950,10 +1076,14 @@ Step  Role        Method   Endpoint                                  Notes
                                                                      Save: technicianId from response.data[n].id
  7    OPERATOR    POST     /api/requests/:requestId/assign           Body: { "technicianId": "..." }
                                                                      Status: ASSIGNED
- 8    TECHNICIAN  POST     /api/requests/:requestId/arrived          Status: IN_PROGRESS
- 9    TECHNICIAN  POST     /api/requests/:requestId/complete         Status: COMPLETED
-10    CLIENT      POST     /api/requests/:requestId/approve          Acknowledgement (status unchanged)
-11    CLIENT      POST     /api/requests/:requestId/pay              Body: { "amount": 150 }
+ 8    TECHNICIAN  POST     /api/requests/:requestId/arrived          Status: ARRIVED
+ 9    TECHNICIAN  POST     /api/requests/:requestId/estimate         Body: { "report": "...", "budget": 150 }
+                                                                     Status: ESTIMATED
+10    CLIENT      POST     /api/requests/:requestId/approve-estimate Status: APPROVED
+11    TECHNICIAN  POST     /api/requests/:requestId/start-work       Status: IN_PROGRESS
+12    TECHNICIAN  POST     /api/requests/:requestId/complete         Status: COMPLETED
+13    CLIENT      POST     /api/requests/:requestId/approve          Acknowledgement (status unchanged)
+14    CLIENT      POST     /api/requests/:requestId/pay              Body: { "amount": 150 }
                                                                      Status: PAID
 ```
 

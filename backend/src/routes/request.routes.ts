@@ -4,6 +4,9 @@ import {
   createRequest,
   assignTechnician,
   technicianArrived,
+  submitEstimate,
+  approveEstimate,
+  startWork,
   completeService,
   approveService,
   confirmPayment,
@@ -46,14 +49,22 @@ router.post('/:id/assign', authorizeRole([Role.OPERATOR, Role.ADMIN]), assignTec
 // Technician marks arrival
 router.post('/:id/arrived', authorizeRole([Role.TECHNICIAN]), technicianArrived);
 
+// Technician submits report and budget estimate
+router.post('/:id/estimate', authorizeRole([Role.TECHNICIAN]), submitEstimate);
+
+// Client approves budget estimate
+router.post('/:id/approve-estimate', authorizeRole([Role.CLIENT]), approveEstimate);
+
+// Technician starts work
+router.post('/:id/start-work', authorizeRole([Role.TECHNICIAN]), startWork);
+
 // Technician marks service complete
 router.post('/:id/complete', authorizeRole([Role.TECHNICIAN]), completeService);
 
-// Client approves service
+// Client approves the completed service
 router.post('/:id/approve', authorizeRole([Role.CLIENT]), approveService);
 
-// Client pays
+// Client pays the bill
 router.post('/:id/pay', authorizeRole([Role.CLIENT]), confirmPayment);
 
 export default router;
-
