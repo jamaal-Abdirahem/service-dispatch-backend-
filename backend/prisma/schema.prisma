@@ -53,6 +53,8 @@ model Technician {
   userId         String           @unique @db.ObjectId
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   location       String?
+  latitude       Float?
+  longitude      Float?
   available      Boolean          @default(true)
   
   // Relations
@@ -64,6 +66,8 @@ model ServiceRequest {
   clientName     String           
   phone          String
   location       String
+  latitude       Float?
+  longitude      Float?
   problem        String
   budget         Float?
   problemReport  String?

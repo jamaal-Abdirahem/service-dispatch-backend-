@@ -177,6 +177,8 @@ or for action-only responses (no data to return):
 | `clientName` | `string` | Display name of the client |
 | `phone` | `string` | Contact phone for this job |
 | `location` | `string` | Address / location of the problem |
+| `latitude` | `number \| null` | Optional GPS Latitude coordinate for map plotting |
+| `longitude` | `number \| null` | Optional GPS Longitude coordinate for map plotting |
 | `problem` | `string` | Problem description |
 | `status` | `RequestStatus` | Current status (see lifecycle below) |
 | `clientId` | `string` (ObjectId) | ID of the User who owns this request |
@@ -662,6 +664,8 @@ Create a new service request. Status is set to `REPORTED` automatically.
   "clientName": "Hassan Idle",
   "phone": "0634567890",
   "location": "Jigjiga Yar, near the central market",
+  "latitude": 2.0469,
+  "longitude": 45.3182,
   "problem": "Electrical short circuit in the kitchen — appliances not working"
 }
 ```
@@ -671,6 +675,8 @@ Create a new service request. Status is set to `REPORTED` automatically.
 | `clientName` | `string` | ✅ | Name displayed on the request (may differ from account name if OPERATOR submits on behalf of client) |
 | `phone` | `string` | ✅ | Contact phone number for this job |
 | `location` | `string` | ✅ | Full address where the technician should go |
+| `latitude` | `number` | ❌ | Exact GPS latitude for plotting on a map view |
+| `longitude` | `number` | ❌ | Exact GPS longitude for plotting on a map view |
 | `problem` | `string` | ✅ | Clear description of the problem |
 
 #### Success Response — `201 Created`
@@ -683,6 +689,8 @@ Create a new service request. Status is set to `REPORTED` automatically.
     "clientName": "Hassan Idle",
     "phone": "0634567890",
     "location": "Jigjiga Yar, near the central market",
+    "latitude": 2.0469,
+    "longitude": 45.3182,
     "problem": "Electrical short circuit in the kitchen — appliances not working",
     "status": "REPORTED",
     "clientId": "507f1f77bcf86cd799439011",
