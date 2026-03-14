@@ -39,7 +39,7 @@ router.get('/:id', getRequestById);
 router.post(
   '/',
   authorizeRole([Role.CLIENT, Role.OPERATOR]),
-  validateBody(['clientName', 'phone', 'location', 'problem']),
+  validateBody(['clientName', 'phone', 'location', 'problem', 'vehicleType']),
   createRequest
 );
 

@@ -179,6 +179,7 @@ or for action-only responses (no data to return):
 | `location` | `string` | Address / location of the problem |
 | `latitude` | `number \| null` | Optional GPS Latitude coordinate for map plotting |
 | `longitude` | `number \| null` | Optional GPS Longitude coordinate for map plotting |
+| `vehicleType`| `VehicleType` | `CAR` \| `MOTORCYCLE` \| `BAJAJ` \| `LORRY` \| `BUS` \| `OTHER` |
 | `problem` | `string` | Problem description |
 | `status` | `RequestStatus` | Current status (see lifecycle below) |
 | `clientId` | `string` (ObjectId) | ID of the User who owns this request |
@@ -666,6 +667,7 @@ Create a new service request. Status is set to `REPORTED` automatically.
   "location": "Jigjiga Yar, near the central market",
   "latitude": 2.0469,
   "longitude": 45.3182,
+  "vehicleType": "CAR",
   "problem": "Electrical short circuit in the kitchen — appliances not working"
 }
 ```
@@ -677,7 +679,17 @@ Create a new service request. Status is set to `REPORTED` automatically.
 | `location` | `string` | ✅ | Full address where the technician should go |
 | `latitude` | `number` | ❌ | Exact GPS latitude for plotting on a map view |
 | `longitude` | `number` | ❌ | Exact GPS longitude for plotting on a map view |
+| `vehicleType`| `string` | ✅ | `CAR`, `MOTORCYCLE`, `BAJAJ`, `LORRY`, `BUS`, or `OTHER` |
 | `problem` | `string` | ✅ | Clear description of the problem |
+
+### Map Marker Emoji Mapping
+When displaying Service Requests on a map based on their `latitude` and `longitude`, the frontend should map the `vehicleType` to the following marker emojis:
+- `CAR` → 🚗
+- `MOTORCYCLE` → 🏍️
+- `BAJAJ` → 🛺
+- `LORRY` → 🚚
+- `BUS` → 🚌
+- `OTHER` → 📍
 
 #### Success Response — `201 Created`
 
@@ -691,6 +703,7 @@ Create a new service request. Status is set to `REPORTED` automatically.
     "location": "Jigjiga Yar, near the central market",
     "latitude": 2.0469,
     "longitude": 45.3182,
+    "vehicleType": "CAR",
     "problem": "Electrical short circuit in the kitchen — appliances not working",
     "status": "REPORTED",
     "clientId": "507f1f77bcf86cd799439011",

@@ -4,7 +4,7 @@ import { RequestStatus, PaymentStatus, Prisma } from '@prisma/client';
 
 export class RequestService {
   static async createRequest(data: any, clientId: string) {
-    const { problem, location, latitude, longitude, phone, clientName } = data;
+    const { problem, location, latitude, longitude, vehicleType, phone, clientName } = data;
 
     return prisma.serviceRequest.create({
       data: {
@@ -13,6 +13,7 @@ export class RequestService {
         location,
         latitude: latitude ? Number(latitude) : null,
         longitude: longitude ? Number(longitude) : null,
+        vehicleType,
         phone,
         clientName,
         status: RequestStatus.REPORTED
